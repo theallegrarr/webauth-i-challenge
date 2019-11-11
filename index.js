@@ -49,6 +49,29 @@ server.post('/api/login', (req, res) => {
     });
 });
 
+server.get('/api/users', restricted, (req, res) => {
+  Users.find()
+    .then(users => {
+      res.json(users);
+    })
+    .catch(err => res.send(err));
+});
+
+function restricted(req, res, next) {
+  const { username, password } = req.headers;
+
+  Users.findBy({ username: username }).first()
+    .then(user => {
+      if(user && bcrypt.compareSync(password, user.password)){
+        next();
+      } else {
+        res.status(401).json({ message: 'invalid credentials ' })
+      }
+    }).catch(err => {
+      res.status(401).json({ message: err.message })
+    })
+}
+
 
 const port = process.env.PORT || 5000;
 server.listen(port, () => console.log(`\n** Running on port ${port} **\n`));
