@@ -1,11 +1,11 @@
 const express = require('express');
-const server = require('express').Router();
+const router = require('express').Router();
 const bcrypt = require('bcryptjs');
 const restricted = require('../middlewares/session-checker');
 const db = require('../data/dbConfig');
 const Users = require('../users/users-model.js');
 
-server.post('/register', (req, res) => {
+router.post('/register', (req, res) => {
   const hash = bcrypt.hashSync(req.body.password, 11);
   const newUser = {
     username: req.body.username,
@@ -21,7 +21,7 @@ server.post('/register', (req, res) => {
     });
 });
 
-server.post('/login', (req, res) => {
+router.post('/login', (req, res) => {
   let { username, password } = req.body;
 
   Users.findBy({ username })
@@ -39,7 +39,7 @@ server.post('/login', (req, res) => {
     });
 });
 
-server.get('/users', restricted, (req, res) => {
+router.get('/users', restricted, (req, res) => {
   Users.find()
     .then(users => {
       res.json(users);
@@ -47,4 +47,18 @@ server.get('/users', restricted, (req, res) => {
     .catch(err => res.send(err));
 });
 
-module.exports = server;
+router.get('/logout', (req, res) => {
+  if (req.session) {
+    req.session.destroy(err => {
+      if (err) {
+        res.json('you can not leave, actually')
+      } else {
+        res.json('goodbye, sad to see you go')
+      }
+    })
+  } else {
+    res.end();
+  }
+})
+
+module.exports = router;
